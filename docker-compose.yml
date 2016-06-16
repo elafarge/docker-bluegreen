@@ -1,0 +1,22 @@
+version: '2'
+
+services:
+    load-balancer:
+        container_name: load-balancer
+        build: .
+        image: load-balancer
+        network_mode: host
+
+    docker-blue:
+        container_name: docker_blue
+        build: ./sample_service
+        image: sample_service:latest
+        ports:
+            - 8001:8000
+
+    docker-green:
+        container_name: docker_green
+        build: ./sample_service
+        image: sample_service:latest
+        ports:
+            - 8002:8000
