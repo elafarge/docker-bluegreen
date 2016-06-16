@@ -47,18 +47,27 @@ echo "Starting blue with the newly pulled image..."
 /usr/bin/docker-compose up --no-recreate -d
 echo "enable server dockers/dockerblue" | socat tcp4-connect:localhost:4691 stdio
 
-# Wait for our status check(s) to be confirmed
+# Wait for our status check(s) to be confirmed (times out after 30 seconds)
 # TODO: understand what HAProxy gives us a bit better and take the most
 # relevant indicator into account
 HAPROXY_STATE=$(echo "show servers state dockers" | socat tcp4-connect:localhost:4691 stdio | grep dockerblue)
 NOTUPYET_REGEX='^[0-9]+ dockers [0-9]+ dockerblue [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} 2 [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ 4 [0-9]+ [0-9]+ [0-9]+ [0-9]+$'
 
+timeout_date=$(date +"%Y%m%d%H%M%S" -d "+30seconds")
 while ! [[ $HAPROXY_STATE =~ $NOTUPYET_REGEX ]]
 do
+  # Do we need to time out ?
+  now=$(date +"%Y%m%d%H%M%S")
+  if [[ "$now" -gt "$timeout_date" ]]; then
+    echo "[ERROR] HAProxy's health check on blue container failed !"
+    echo "[INFO]  Green container won't be updated... please fix the Docker image and redeploy :)"
+    exit 12
+  fi
+
+  # No ? Well let's wait a bit more then!
   echo "Waiting for blue to be ready & healthy..."
   sleep 1s
   HAPROXY_STATE=$(echo "show servers state dockers" | socat tcp4-connect:localhost:4691 stdio | grep dockerblue)
-  echo "$HAPROXY_STATE"
 done
 
 # Let's renable blue
