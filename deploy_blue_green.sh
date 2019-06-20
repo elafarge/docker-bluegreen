@@ -51,7 +51,7 @@ echo "enable server dockers/dockerblue" | socat tcp4-connect:localhost:4691 stdi
 # TODO: understand what HAProxy gives us a bit better and take the most
 # relevant indicator into account
 HAPROXY_STATE=$(echo "show servers state dockers" | socat tcp4-connect:localhost:4691 stdio | grep dockerblue)
-NOTUPYET_REGEX='^[0-9]+ dockers [0-9]+ dockerblue [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} 2 [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ 4 [0-9]+ [0-9]+ [0-9]+ [0-9]+$'
+NOTUPYET_REGEX='^[0-9]+ dockers [0-9]+ dockerblue [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} 2 [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ 4 [0-9]+ [0-9]+ [0-9]+ [0-9]+'
 
 timeout_date=$(date +"%Y%m%d%H%M%S" -d "+30seconds")
 while ! [[ $HAPROXY_STATE =~ $NOTUPYET_REGEX ]]
