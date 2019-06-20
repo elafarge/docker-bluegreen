@@ -23,10 +23,10 @@
 
 if [[ -z "$DOCKER_IMAGE" ]]; then
   echo "Building local images delcared in your docker-compose.yaml..."
-  /usr/bin/docker-compose build
+  docker-compose build
 else
   echo "Pulling down the latest version of the Docker image from DockerHub..."
-  /usr/bin/docker pull "$DOCKER_IMAGE"
+  docker pull "$DOCKER_IMAGE"
 fi
 
 # Let's disable the blue container
@@ -39,19 +39,19 @@ sleep 5s # Arbitrary value to leave green enough time to reply to pending
          # point. TODO: investigate that a little
 
 # Then stop and remove it with docker-compose
-/usr/bin/docker-compose stop docker-blue || echo "No blue container to stop"
-/usr/bin/docker-compose rm -f docker-blue
+docker-compose stop docker-blue || echo "No blue container to stop"
+docker-compose rm -f docker-blue
 
 # And start another one with the new version of the code
 echo "Starting blue with the newly pulled image..."
-/usr/bin/docker-compose up --no-recreate -d
+docker-compose up --no-recreate -d
 echo "enable server dockers/dockerblue" | socat tcp4-connect:localhost:4691 stdio
 
 # Wait for our status check(s) to be confirmed (times out after 30 seconds)
 # TODO: understand what HAProxy gives us a bit better and take the most
 # relevant indicator into account
 HAPROXY_STATE=$(echo "show servers state dockers" | socat tcp4-connect:localhost:4691 stdio | grep dockerblue)
-NOTUPYET_REGEX='^[0-9]+ dockers [0-9]+ dockerblue [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} 2 [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ 4 [0-9]+ [0-9]+ [0-9]+ [0-9]+$'
+NOTUPYET_REGEX='^[0-9]+ dockers [0-9]+ dockerblue [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} 2 [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ [0-9]+ 4 [0-9]+ [0-9]+ [0-9]+ [0-9]+'
 
 timeout_date=$(date +"%Y%m%d%H%M%S" -d "+30seconds")
 while ! [[ $HAPROXY_STATE =~ $NOTUPYET_REGEX ]]
@@ -77,9 +77,9 @@ echo "Blue is ready to run the new Docker image, let's update green now !"
 # should work if it did for blue)
 echo "disable server dockers/dockergreen" | socat tcp4-connect:localhost:4691 stdio
 
-/usr/bin/docker-compose stop docker-green
-/usr/bin/docker-compose rm -f docker-green
-/usr/bin/docker-compose up --no-recreate -d
+docker-compose stop docker-green
+docker-compose rm -f docker-green
+docker-compose up --no-recreate -d
 echo "enable server dockers/dockergreen" | socat tcp4-connect:localhost:4691 stdio
 
 # That's all :)
